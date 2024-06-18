@@ -1,6 +1,7 @@
 /.idea
-/_pycache
+**/_pycache
 /Inputs/*
 /raw/*
 /.vscode
 /.vs
+
