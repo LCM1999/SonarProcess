@@ -2,6 +2,7 @@ import numpy as np
 import os, shutil
 import tarfile
 from Imaging.covis_imaging_sweep import covis_imaging_sweep
+from Diffuse.covis_diffuse_sweep import covis_diffuse_sweep
 
 
 def covis_raw_sweep(filepath):
@@ -30,7 +31,7 @@ def covis_raw_sweep(filepath):
         print('diffuse: ' + root2[0])
         # ---------------------
         # 此处进入diffuse数据处理:
-        # covis = covis_diffuse_sweep(root2[0])
+        covis = covis_diffuse_sweep(root2[0])
         # ---------------------
     elif swp_type == 'bat':
         print('bathymetry' + root2[0])
@@ -40,7 +41,7 @@ def covis_raw_sweep(filepath):
         # ---------------------
 
     # 删除解压缩文件
-    # shutil.rmtree(root2[0])
+    shutil.rmtree(root2[0])
 
     return covis
   
