@@ -1,7 +1,8 @@
 /.idea
 **/__pycache__
-data/*
+data/imaging/*
 !data/mat/imaging/.gitkeep
+data/diffuse/*
 !data/mat/diffuse/.gitkeep
 /.vscode
 /.vs
