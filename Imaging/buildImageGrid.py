@@ -3,7 +3,7 @@ import scipy
 import vtk
 
 def build_image_grid(x, y, z, grd_out, need_smooth=False):
-    points = [(x[i], y[i], z[i]) for i in range(len(x))]
+    # points = [(x[i], y[i], z[i]) for i in range(len(x))]
     image = vtk.vtkImageData()
     bounding = [grd_out['bounds']['xmin'], grd_out['bounds']['xmax'],
                 grd_out['bounds']['ymin'], grd_out['bounds']['ymax'],

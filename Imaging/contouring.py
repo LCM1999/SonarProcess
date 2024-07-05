@@ -1,6 +1,7 @@
 import vtk
 
 
+# return a vtkPolyData
 def get_isosurface(grid, iso_value, attribute_name):
     grid.GetOutputData().SetActiveAttribute(attribute_name, 0)
     surface = vtk.vtkContourFilter()
