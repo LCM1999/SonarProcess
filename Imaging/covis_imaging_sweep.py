@@ -16,14 +16,11 @@ from Common.covis_coords_darrell import covis_coords_darrell
 from Imaging.l3grid_imaging import l3grid_imaging
 from Common.covis_version import covis_version
 
-import vtk
-import vtkmodules
 
-def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
+def covis_imaging_sweep(filedir, json_file='Inputs/covis_image.json'):
     head_tail = os.path.split(filedir)
     swp_path = head_tail[0]
     swp_name = head_tail[1]
-
 
     # -------------------------
     # Initialization
@@ -38,21 +35,21 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
         central_head = 279
 
     # calibration parameters
-    T = 2.41    # temperataure (degree C)
-    S = 34.53    # salinity (PSU)
-    pH = 7    # pH
-    lat = 46    # latitude ( degree N )
-    depth =1544    # depth ( m )
-    p = gsw.p_from_z(-depth,lat)
-    c = gsw.sound_speed_t_exact(S,T,p)    # sound speed ( m/s )
+    T = 2.41  # temperataure (degree C)
+    S = 34.53  # salinity (PSU)
+    pH = 7  # pH
+    lat = 46  # latitude ( degree N )
+    depth = 1544  # depth ( m )
+    p = gsw.p_from_z(-depth, lat)
+    c = gsw.sound_speed_t_exact(S, T, p)  # sound speed ( m/s )
 
     # snr parameters
-    noise_floor = 0.1970    # rms noise floor
-    snr_thresh = 50    # threshold (dB)
+    noise_floor = 0.1970  # rms noise floor
+    snr_thresh = 50  # threshold (dB)
 
     # OSCFAR parameters
-    clutterp = 65    # start with the 65% quantile as the clutter threshold
-    scrthreshold = 20    # dB threshold for signal-to-clutter ratio
+    clutterp = 65  # start with the 65% quantile as the clutter threshold
+    scrthreshold = 20  # dB threshold for signal-to-clutter ratio
 
     if not os.path.exists(filedir):
         print('Error: imaging file directory not exists.')
@@ -64,10 +61,10 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
     if not os.path.exists(full_swp_path):
         print('Error: could not find sweep.json in imaging file directory.')
         return
-    with open(full_swp_path, 'r', encoding='utf-8') as f:  
-        swp = json.load(f) 
-    
-    # save sweep path and name in swp structure
+    with open(full_swp_path, 'r', encoding='utf-8') as f:
+        swp = json.load(f)
+
+        # save sweep path and name in swp structure
     swp['path'] = swp_path
     swp['name'] = swp_name
 
@@ -75,8 +72,8 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
     if not os.path.exists(json_file):
         print('Error: JSON input file does not exist.')
         return
-    with open(json_file, 'r', encoding='utf-8') as f:  
-        covis = json.load(f) 
+    with open(json_file, 'r', encoding='utf-8') as f:
+        covis = json.load(f)
     if covis['type'] != 'imaging':
         print('Error: Incorrect covis input file type. Looking for: imaging, Current type: ' + covis['type'])
         return
@@ -88,6 +85,7 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
     covis['grid'] = covis_rectgrid_imaging(covis['grid'])
     covis['grid']['name'] = swp['name']
     grd_out = covis['grid']
+    print(grd_out)
 
     # set local copies of covis structs
     grd = covis['grid']
@@ -101,7 +99,7 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
     # check the grid
     # Set the type of grid Ialue (intensity or complex).
     if not 'type' in grd:
-        grd['type'] = 'intensity'    #default grid type
+        grd['type'] = 'intensity'  #default grid type
         if config.Verbose:
             print('Setting grid type: ' + grd['type'])
 
@@ -114,17 +112,17 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
     # Set compass declination
     if not 'declination' in pos:
         pos['declination'] = 16.0
-    
+
     # calibration parameters
     if not 'mode' in cal:
-        cal['mode'] = 'VSS'    # 'VSS' or 'TS'
+        cal['mode'] = 'VSS'  # 'VSS' or 'TS'
 
     # set position of sonar
     # should use covis.position info, but for now ...
     if not 'altitude' in pos:
         pos['altitude'] = 4.2
     alt = pos['altitude']
-    origin = [0, 0, alt]    # sonar is always at (0,0,0) in world coords
+    origin = [0, 0, alt]  # sonar is always at (0,0,0) in world coords
 
     # directory list of *.bin file
     all_files = os.listdir(filedir)
@@ -139,12 +137,12 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
         print('Warning: there are ' + str(len(json_file) - nfiles) + ' bin files missing in the sweep')
 
     # read ping meta data from json file
-    with open(filedir + '/' + json_file[0], 'r', encoding='utf-8') as f:  
-        jsonf = json.load(f) 
+    with open(filedir + '/' + json_file[0], 'r', encoding='utf-8') as f:
+        jsonf = json.load(f)
     ind = 1
     while abs(jsonf['hdr']['sample_rate'] - 34483) > 1 and ind <= len(json_file):
-        with open(filedir + '/' + json_file[ind], 'r', encoding='utf-8') as f:  
-            jsonf = json.load(f) 
+        with open(filedir + '/' + json_file[ind], 'r', encoding='utf-8') as f:
+            jsonf = json.load(f)
         ind = ind + 1
 
     # Read index file
@@ -167,24 +165,23 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
         else:
             rot_yaw = getattr(row, 'yaw') - central_yaw
         png.append({
-            'num' : getattr(row, 'ping'),
-            'sec' : getattr(row, 'seconds') + getattr(row, 'usecs') / 1e6,
-            'rot_pitch' : getattr(row, 'pitch'),
-            'sen_pitch' : getattr(row, 'kPAngle'),
-            'rot_roll' : getattr(row, 'roll') / 6,
-            'sen_roll' : getattr(row, 'kRAngle'),
-            'rot_yaw' : rot_yaw,
-            'sen_head' : getattr(row, 'kHeading'),
-            'hdr' : jsonf['hdr']
+            'num': getattr(row, 'ping'),
+            'sec': getattr(row, 'seconds') + getattr(row, 'usecs') / 1e6,
+            'rot_pitch': getattr(row, 'pitch'),
+            'sen_pitch': getattr(row, 'kPAngle'),
+            'rot_roll': getattr(row, 'roll') / 6,
+            'sen_roll': getattr(row, 'kRAngle'),
+            'rot_yaw': rot_yaw,
+            'sen_head': getattr(row, 'kHeading'),
+            'hdr': jsonf['hdr']
         })
-     
+
     # group the pings transmitted at the same elevation angles into bursts
     burst = covis_parse_bursts_pitch(png)
 
     # range of elev angles to process
     elev_start = covis['processing']['bounds']['pitch']['start']
     elev_stop = covis['processing']['bounds']['pitch']['stop']
-    
 
     # -------------------------
     # Main program
@@ -195,7 +192,7 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
     bad_ping_count = 0
     nbursts = len(burst)
     burst_count = 0
-    
+
     for nb in range(nbursts):
         # check elevation
         if (burst[nb]['pitch'] < elev_start) or (burst[nb]['pitch'] > elev_stop):
@@ -213,7 +210,7 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
         # loop over pings in a burst
         ping_count = 0
         for npg in range(npings):
-            ping_num = burst[nb]['ping'][npg]    # ping number
+            ping_num = burst[nb]['ping'][npg]  # ping number
             # read the corresponding binary file
             bin_file = 'rec_7038_%06d.bin' % ping_num
             if not os.path.exists(filedir + '/' + bin_file):
@@ -224,14 +221,14 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
                     ip = i
 
             # define sonar orientation based on TCM readings
-            pitch = (np.pi/180) * png[ip]['sen_pitch']
-            roll = (np.pi/180) * png[ip]['sen_roll']
-            yaw = (np.pi/180) * png[ip]['rot_yaw']
+            pitch = (np.pi / 180) * png[ip]['sen_pitch']
+            roll = (np.pi / 180) * png[ip]['sen_roll']
+            yaw = (np.pi / 180) * png[ip]['rot_yaw']
 
             if config.Verbose > 1:
                 print('Reading: ' + filedir + '/' + bin_file)
             if config.Verbose > 2:
-                print('Pitch %f, roll %f, yaw %f\n' % pitch*180/np.pi, roll*180/np.pi, yaw*180/np.pi)
+                print('Pitch %f, roll %f, yaw %f\n' % pitch * 180 / np.pi, roll * 180 / np.pi, yaw * 180 / np.pi)
 
             # read raw element quadrature data
             try:
@@ -266,7 +263,7 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
 
             # Apply Filter to data
             try:
-                data, filt, png[len(png)-1] = covis_filter(data, filt, png[len(png)-1])
+                data, filt, png[len(png) - 1] = covis_filter(data, filt, png[len(png) - 1])
             except:
                 print('Warning: error in filtering ping %d at pitch %f' % ping_num, burst[nb]['pitch'])
                 bad_ping_count = bad_ping_count + 1
@@ -291,9 +288,9 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
                 bad_ping.append(ping_num)
                 continue
 
-            bf_sig_out[:,:,npg] = bf_sig
-            I_out[:,:,npg] = np.power(np.abs(bf_sig), 2)
-            Isq_out[:,:,npg] = np.power(np.abs(bf_sig), 4)
+            bf_sig_out[:, :, npg] = bf_sig
+            I_out[:, :, npg] = np.power(np.abs(bf_sig), 2)
+            Isq_out[:, :, npg] = np.power(np.abs(bf_sig), 4)
 
         if np.all(np.isnan(bf_sig_out)):
             print('Warning: no valid pings at pitch %f' % burst[nb].pitch)
@@ -317,51 +314,52 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
         average = np.nanmean(bf_sig_out, 2)
         bf_sig_a = np.abs(average)
         # remove the average to enhance plume signals
-        bf_sig_d = np.sqrt(np.nanmean(np.power(np.abs(bf_sig_out-np.tile(average[:,:,np.newaxis],(1,1,bf_sig_out.shape[2]))),2),2))
+        bf_sig_d = np.sqrt(np.nanmean(
+            np.power(np.abs(bf_sig_out - np.tile(average[:, :, np.newaxis], (1, 1, bf_sig_out.shape[2]))), 2), 2))
 
         # calculate signal to noise ratio
-        snr_a = 20*np.log10(np.abs(bf_sig_a)/noise_floor)
-        snr_d = 20*np.log10(np.abs(bf_sig_d)/noise_floor)
+        snr_a = 20 * np.log10(np.abs(bf_sig_a) / noise_floor)
+        snr_d = 20 * np.log10(np.abs(bf_sig_d) / noise_floor)
 
         # OSCFAR detection section
         # magnitude squared of the beamformed output
         mag2 = bf_sig_d * np.conj(bf_sig_d)
         # determine the specified quantile at each range (time) step
         clutter = np.percentile(mag2, clutterp, 1)
-        dBclutter = 10*np.log10(np.array([clutter]).T) @ np.ones((1,len(bfm['angle'])))
-        dBmag = 10*np.log10(mag2)
-        dBSCR = dBmag - dBclutter    # signal to clutter ratio (SCR)
-        indexD_d = dBSCR > scrthreshold    # detected samples
+        dBclutter = 10 * np.log10(np.array([clutter]).T) @ np.ones((1, len(bfm['angle'])))
+        dBmag = 10 * np.log10(mag2)
+        dBSCR = dBmag - dBclutter  # signal to clutter ratio (SCR)
+        indexD_d = dBSCR > scrthreshold  # detected samples
 
         # magnitude squared of the beamformed output
         mag2 = bf_sig_a * np.conj(bf_sig_a)
         # determine the specified quantile at each range (time) step
         clutter = np.percentile(mag2, clutterp, 1)
-        dBclutter = 10*np.log10(np.array([clutter]).T) @ np.ones((1,len(bfm['angle'])))
-        dBmag = 10*np.log10(mag2)
-        dBSCR = dBmag - dBclutter    # signal to clutter ratio (SCR)
-        indexD_a = dBSCR > scrthreshold    # detected samples
+        dBclutter = 10 * np.log10(np.array([clutter]).T) @ np.ones((1, len(bfm['angle'])))
+        dBmag = 10 * np.log10(mag2)
+        dBSCR = dBmag - dBclutter  # signal to clutter ratio (SCR)
+        indexD_a = dBSCR > scrthreshold  # detected samples
 
         # calibration
         try:
-            bf_sig_d_cal = covis_calibration(bf_sig_d, bfm, png[len(png)-1], cal,T, S, pH, lat,depth)
-            bf_sig_a_cal = covis_calibration(bf_sig_a, bfm, png[len(png)-1], cal,T, S, pH, lat,depth)
+            bf_sig_d_cal = covis_calibration(bf_sig_d, bfm, png[len(png) - 1], cal, T, S, pH, lat, depth)
+            bf_sig_a_cal = covis_calibration(bf_sig_a, bfm, png[len(png) - 1], cal, T, S, pH, lat, depth)
         except:
-            print('Warning: error in calibration at pitch %f',burst[nb]['pitch'])
+            print('Warning: error in calibration at pitch %f', burst[nb]['pitch'])
             continue
 
-        Id = np.power(np.abs(bf_sig_d_cal),2)
-        Ia = np.power(np.abs(bf_sig_a_cal),2)
+        Id = np.power(np.abs(bf_sig_d_cal), 2)
+        Ia = np.power(np.abs(bf_sig_a_cal), 2)
         Id_filt = Id.copy()
         Ia_filt = Ia.copy()
 
         # mask out data with low snr
-        Id_filt[snr_d < snr_thresh] = 10**-9
-        Id_filt[indexD_d == False] = 10**-9
-        Id[snr_d < snr_thresh] = 10**-9
-        Ia_filt[snr_a < snr_thresh] = 10**-9
-        Ia_filt[indexD_a == False] = 10**-9
-        Ia[snr_a < snr_thresh] = 10**-9
+        Id_filt[snr_d < snr_thresh] = 10 ** -9
+        Id_filt[indexD_d == False] = 10 ** -9
+        Id[snr_d < snr_thresh] = 10 ** -9
+        Ia_filt[snr_a < snr_thresh] = 10 ** -9
+        Ia_filt[indexD_a == False] = 10 ** -9
+        Ia[snr_a < snr_thresh] = 10 ** -9
         Kp[snr_d < snr_thresh] = 0
 
         # transform sonar coords into world coords
@@ -369,130 +367,26 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
         azim = bfm['angle']
 
         xv, yv, zv = covis_coords_darrell(origin, rng, azim, yaw, roll, pitch, central_head, pos['declination'])
- 
-        xv_out[:,:,nb] = xv
-        yv_out[:,:,nb] = yv
-        zv_out[:,:,nb] = zv
-        Ia_out[:,:,nb] = Ia
-        Id_out[:,:,nb] = Id
-        Ia_filt_out[:,:,nb] = Ia_filt
-        Id_filt_out[:,:,nb] = Id_filt
-        Kp_out[:,:,nb] = Kp
-        # xv = xv.reshape(-1).astype('float32')
-        # yv = yv.reshape(-1).astype('float32')
-        # zv = zv.reshape(-1).astype('float32')
-        # Id = Id.reshape(-1).astype('float32')
-        # grd_in = {
-        #     'x': xv,  # .reshape(-1).astype('float32'),
-        #     'y': yv,  # .reshape(-1).astype('float32'),
-        #     'z': zv,  # .reshape(-1).astype('float32'),
-        #     # 'Ia' : Ia_out.reshape(-1),
-        #     'Id': Id,  # .reshape(-1).astype('float32'),
-        #     # 'Ia_filt' : Ia_filt_out.flatten(),
-        #     # 'Id_filt' : Id_filt_out.flatten(),
-        #     # 'Kp' : Kp_out.reshape(-1)
-        # }
-        # print(grd_in)
-        # df = pd.DataFrame(data=grd_in)
-        # frame_name = '/data/grd_in_' + str(nb) + '.csv'
-        # df.to_csv(frame_name, index=False)
-        # End loop over bursts
 
-    sgrid = vtk.vtkStructuredGrid()
-    sgrid.SetDimensions(xv_out.shape)
-
-    points = vtk.vtkPoints()
-    points.Allocate(xv_out.size)
-
-    Id_array = vtk.vtkFloatArray()
-    Id_array.SetName('Id')
-    Id_array.SetNumberOfComponents(1)
-    Id_array.SetNumberOfTuples(xv_out.size)
-
-    index = 0
-    for z in range(xv_out.shape[2]):
-        for y in range(xv_out.shape[1]):
-            for x in range(xv_out.shape[0]):
-                points.InsertPoint(index, (xv_out[x][y][z], yv_out[x][y][z], zv_out[x][y][z]))
-                Id_array.InsertTuple1(index, Id_out[x][y][z])
-                index += 1
-
-    # xv_out = xv_out.reshape(-1).astype('float32')
-    # yv_out = yv_out.reshape(-1).astype('float32')
-    # zv_out = zv_out.reshape(-1).astype('float32')
-    # Id_out = Id_out.reshape(-1).astype('float32')
-
-
-    sgrid.SetPoints(points)
-    # sgrid.GetPointData().SetVectors(Id_array)
-    sgrid.GetPointData().AddArray(Id_array)
-
-    writer = vtk.vtkStructuredGridWriter()
-    writer.SetFileName('/data/covis_image.vtk')
-    writer.SetInputData(sgrid)
-    writer.SetFileTypeToBinary()
-    writer.Write()
-
-    exit(0)
-
-    block_size = int(len(xv_out)/4)
-    # grid the ping data
-    grd_in = {
-        'x' : xv_out[0:block_size],        #.reshape(-1).astype('float32'),
-        'y' : yv_out[0:block_size],        #.reshape(-1).astype('float32'),
-        'z' : zv_out[0:block_size],        #.reshape(-1).astype('float32'),
-        # 'Ia' : Ia_out.reshape(-1),
-        'Id' : Id_out[0:block_size],        #.reshape(-1).astype('float32'),
-        # 'Ia_filt' : Ia_filt_out.flatten(),
-        # 'Id_filt' : Id_filt_out.flatten(),
-        # 'Kp' : Kp_out.reshape(-1)
-    }
-    # print(grd_in)
-    df = pd.DataFrame(data=grd_in)
-    df.to_csv('/data/grd_in_0.csv', index=False)
+        xv_out[:, :, nb] = xv
+        yv_out[:, :, nb] = yv
+        zv_out[:, :, nb] = zv
+        Ia_out[:, :, nb] = Ia
+        Id_out[:, :, nb] = Id
+        Ia_filt_out[:, :, nb] = Ia_filt
+        Id_filt_out[:, :, nb] = Id_filt
+        Kp_out[:, :, nb] = Kp
 
     grd_in = {
-        'x' : xv_out[block_size:block_size*2],        #.reshape(-1).astype('float32'),
-        'y' : yv_out[block_size:block_size*2],        #.reshape(-1).astype('float32'),
-        'z' : zv_out[block_size:block_size*2],        #.reshape(-1).astype('float32'),
-        # 'Ia' : Ia_out.reshape(-1),
-        'Id' : Id_out[block_size:block_size*2],        #.reshape(-1).astype('float32'),
-        # 'Ia_filt' : Ia_filt_out.flatten(),
-        # 'Id_filt' : Id_filt_out.flatten(),
-        # 'Kp' : Kp_out.reshape(-1)
+        'x': xv_out,  # .reshape(-1).astype('float32'),
+        'y': yv_out,  # .reshape(-1).astype('float32'),
+        'z': zv_out,  # .reshape(-1).astype('float32'),
+        'Ia': Ia_out,
+        'Id': Id_out,  # .reshape(-1).astype('float32'),
+        'Ia_filt': Ia_filt_out,
+        'Id_filt': Id_filt_out,
+        'Kp': Kp_out
     }
-    # print(grd_in)
-    df = pd.DataFrame(data=grd_in)
-    df.to_csv('/data/grd_in_1.csv', index=False)
-
-    grd_in = {
-        'x' : xv_out[block_size*2:block_size*3],        #.reshape(-1).astype('float32'),
-        'y' : yv_out[block_size*2:block_size*3],        #.reshape(-1).astype('float32'),
-        'z' : zv_out[block_size*2:block_size*3],        #.reshape(-1).astype('float32'),
-        # 'Ia' : Ia_out.reshape(-1),
-        'Id' : Id_out[block_size*2:block_size*3],        #.reshape(-1).astype('float32'),
-        # 'Ia_filt' : Ia_filt_out.flatten(),
-        # 'Id_filt' : Id_filt_out.flatten(),
-        # 'Kp' : Kp_out.reshape(-1)
-    }
-    # print(grd_in)
-    df = pd.DataFrame(data=grd_in)
-    df.to_csv('/data/grd_in_2.csv', index=False)
-
-    grd_in = {
-        'x' : xv_out[block_size*3:],        #.reshape(-1).astype('float32'),
-        'y' : yv_out[block_size*3:],        #.reshape(-1).astype('float32'),
-        'z' : zv_out[block_size*3:],        #.reshape(-1).astype('float32'),
-        # 'Ia' : Ia_out.reshape(-1),
-        'Id' : Id_out[block_size*3:],        #.reshape(-1).astype('float32'),
-        # 'Ia_filt' : Ia_filt_out.flatten(),
-        # 'Id_filt' : Id_filt_out.flatten(),
-        # 'Kp' : Kp_out.reshape(-1)
-    }
-    # print(grd_in)
-    df = pd.DataFrame(data=grd_in)
-    df.to_csv('/data/grd_in_3.csv', index=False)
-    exit(0)
 
     '''
     with open('data/grd_in.bin', "wb") as file:
@@ -501,25 +395,25 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
         joblib.dump(grd_out,file)
     exit(0)
     '''
-    
-    grd_out = l3grid_imaging(grd_in,grd_out)
+
+    grd_out = l3grid_imaging(grd_in, grd_out)
 
     # normalize the grid with the grid weights
-    grd_out['Ia'] = np.divide(grd_out['Ia'], grd_out['w'], where=grd_out['w']!=0)
-    grd_out['Id'] = np.divide(grd_out['Id'], grd_out['w'], where=grd_out['w']!=0)
-    grd_out['Ia_filt'] = np.divide(grd_out['Ia_filt'], grd_out['w'], where=grd_out['w']!=0)
-    grd_out['Id_filt'] = np.divide(grd_out['Id_filt'], grd_out['w'], where=grd_out['w']!=0)
-    grd_out['Kp'] = np.divide(grd_out['Kp'], grd_out['w'], where=grd_out['w']!=0)
+    grd_out['Ia'] = np.divide(grd_out['Ia'], grd_out['w'], where=grd_out['w'] != 0)
+    grd_out['Id'] = np.divide(grd_out['Id'], grd_out['w'], where=grd_out['w'] != 0)
+    grd_out['Ia_filt'] = np.divide(grd_out['Ia_filt'], grd_out['w'], where=grd_out['w'] != 0)
+    grd_out['Id_filt'] = np.divide(grd_out['Id_filt'], grd_out['w'], where=grd_out['w'] != 0)
+    grd_out['Kp'] = np.divide(grd_out['Kp'], grd_out['w'], where=grd_out['w'] != 0)
 
     # save local copies of covis structs
     covis_vers = covis_version()
     covis_snr = {
-        'noise_floor' : noise_floor,
-        'threshold' : snr_thresh
+        'noise_floor': noise_floor,
+        'threshold': snr_thresh
     }
     covis_oscfar = {
-        'clutterp' : clutterp,
-        'scrthreshold' : scrthreshold
+        'clutterp': clutterp,
+        'scrthreshold': scrthreshold
     }
     covis['release'] = covis_vers['version_number']
     covis['sweep'] = swp
@@ -535,6 +429,3 @@ def covis_imaging_sweep(filedir, json_file = 'Inputs/covis_image.json'):
     covis['bad_ping'] = ['bad_ping']
 
     return covis
-
-
-
