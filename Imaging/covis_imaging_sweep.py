@@ -16,6 +16,10 @@ from Common.covis_coords_darrell import covis_coords_darrell
 from Imaging.l3grid_imaging import l3grid_imaging
 from Common.covis_version import covis_version
 
+from Imaging.buildImageGrid import build_image_grid, save_image
+from Imaging.buildStructuredGrid import build_structured_grid, save_structured_grid
+from Imaging.contouring import get_isosurface, save_isosurface
+
 
 def covis_imaging_sweep(filedir, json_file='Inputs/covis_image.json'):
     head_tail = os.path.split(filedir)
@@ -395,6 +399,13 @@ def covis_imaging_sweep(filedir, json_file='Inputs/covis_image.json'):
         joblib.dump(grd_out,file)
     exit(0)
     '''
+    s = build_structured_grid(grd_in, True)
+
+    save_structured_grid(s, "F:/data/", "s.vtk")
+
+    ss = get_isosurface(s, 0.002, 'Ia_filt')
+
+    save_isosurface(ss, "F:/data/", "ss.vtp")
 
     grd_out = l3grid_imaging(grd_in, grd_out)
 
@@ -404,6 +415,14 @@ def covis_imaging_sweep(filedir, json_file='Inputs/covis_image.json'):
     grd_out['Ia_filt'] = np.divide(grd_out['Ia_filt'], grd_out['w'], where=grd_out['w'] != 0)
     grd_out['Id_filt'] = np.divide(grd_out['Id_filt'], grd_out['w'], where=grd_out['w'] != 0)
     grd_out['Kp'] = np.divide(grd_out['Kp'], grd_out['w'], where=grd_out['w'] != 0)
+
+    i = build_image_grid(grd_out)
+
+    save_image(i, "F:/data/", "i.vti")
+
+    si = get_isosurface(i, 0.002, 'Ia_filt')
+
+    save_isosurface(si, "F:/data/", "si.vtp")
 
     # save local copies of covis structs
     covis_vers = covis_version()

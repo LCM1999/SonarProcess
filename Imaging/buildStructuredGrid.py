@@ -3,12 +3,20 @@ import scipy
 import vtk
 
 
-def build_structured_grid(xv, yv, zv, Ia=None, Id=None, Ia_filt=None, Id_filt=None, Kp=None, need_smooth=False):
+def build_structured_grid(grid_dict, need_smooth=True):
     sgrid = vtk.vtkStructuredGrid()
-    sgrid.SetDimensions(xv.shape)
+    shape = grid_dict['x'].shape
+    size = grid_dict['x'].size
+    sgrid.SetDimensions(shape)
+
+    Ia = grid_dict['Ia']
+    Id = grid_dict['Id']
+    Ia_filt = grid_dict['Ia_filt']
+    Id_filt = grid_dict['Id_filt']
+    Kp = grid_dict['Kp']
 
     points = vtk.vtkPoints()
-    points.Allocate(xv.size)
+    points.Allocate(size)
 
     Ia_array = None
     Id_array = None
@@ -16,51 +24,46 @@ def build_structured_grid(xv, yv, zv, Ia=None, Id=None, Ia_filt=None, Id_filt=No
     Id_filt_array = None
     Kp_array = None
 
-    if Ia is not None:
-        if need_smooth:
-            Ia = scipy.ndimage.gaussian_filter(Ia, sigma=1.1, mode='nearest')
-        Ia_array = vtk.vtkFloatArray()
-        Ia_array.SetName('Ia')
-        Ia_array.SetNumberOfComponents(1)
-        Ia_array.SetNumberOfTuples(Ia.size)
+    if need_smooth:
+        Ia = scipy.ndimage.gaussian_filter(Ia, sigma=1.1, mode='nearest')
+    Ia_array = vtk.vtkFloatArray()
+    Ia_array.SetName('Ia')
+    Ia_array.SetNumberOfComponents(1)
+    Ia_array.SetNumberOfTuples(size)
 
-    if Id is not None:
-        if need_smooth:
-            Id = scipy.ndimage.gaussian_filter(Id, sigma=1.1, mode='nearest')
-        Id_array = vtk.vtkFloatArray()
-        Id_array.SetName('Id')
-        Id_array.SetNumberOfComponents(1)
-        Id_array.SetNumberOfTuples(Id.size)
+    if need_smooth:
+        Id = scipy.ndimage.gaussian_filter(Id, sigma=1.1, mode='nearest')
+    Id_array = vtk.vtkFloatArray()
+    Id_array.SetName('Id')
+    Id_array.SetNumberOfComponents(1)
+    Id_array.SetNumberOfTuples(size)
 
-    if Ia_filt is not None:
-        if need_smooth:
-            Ia_filt = scipy.ndimage.gaussian_filter(Ia_filt, sigma=1.1, mode='nearest')
-        Ia_filt_array = vtk.vtkFloatArray()
-        Ia_filt_array.SetName('Ia_filt')
-        Ia_filt_array.SetNumberOfComponents(1)
-        Ia_filt_array.SetNumberOfTuples(Ia_filt.size)
+    if need_smooth:
+        Ia_filt = scipy.ndimage.gaussian_filter(Ia_filt, sigma=1.1, mode='nearest')
+    Ia_filt_array = vtk.vtkFloatArray()
+    Ia_filt_array.SetName('Ia_filt')
+    Ia_filt_array.SetNumberOfComponents(1)
+    Ia_filt_array.SetNumberOfTuples(size)
 
-    if Id_filt is not None:
-        if need_smooth:
-            Id_filt = scipy.ndimage.gaussian_filter(Id_filt, sigma=1.1, mode='nearest')
-        Id_filt_array = vtk.vtkFloatArray()
-        Id_filt_array.SetName('Id_filt')
-        Id_filt_array.SetNumberOfComponents(1)
-        Id_filt_array.SetNumberOfTuples(Id_filt.size)
+    if need_smooth:
+        Id_filt = scipy.ndimage.gaussian_filter(Id_filt, sigma=1.1, mode='nearest')
+    Id_filt_array = vtk.vtkFloatArray()
+    Id_filt_array.SetName('Id_filt')
+    Id_filt_array.SetNumberOfComponents(1)
+    Id_filt_array.SetNumberOfTuples(size)
 
-    if Kp is not None:
-        if need_smooth:
-            Kp = scipy.ndimage.gaussian_filter(Kp, sigma=1.1, mode='nearest')
-        Kp_array = vtk.vtkFloatArray()
-        Kp_array.SetName('Kp')
-        Kp_array.SetNumberOfComponents(1)
-        Kp_array.SetNumberOfTuples(Kp.size)
+    if need_smooth:
+        Kp = scipy.ndimage.gaussian_filter(Kp, sigma=1.1, mode='nearest')
+    Kp_array = vtk.vtkFloatArray()
+    Kp_array.SetName('Kp')
+    Kp_array.SetNumberOfComponents(1)
+    Kp_array.SetNumberOfTuples(size)
 
     index = 0
-    for z in range(xv.shape[2]):
-        for y in range(xv.shape[1]):
-            for x in range(xv.shape[0]):
-                points.InsertPoint(index, (xv[x][y][z], yv[x][y][z], zv[x][y][z]))
+    for z in range(shape[2]):
+        for y in range(shape[1]):
+            for x in range(shape[0]):
+                points.InsertPoint(index, (grid_dict['x'][x][y][z], grid_dict['y'][x][y][z], grid_dict['z'][x][y][z]))
                 if Ia_array is not None:
                     Ia_array.InsertTuple1(index, Ia[x][y][z])
                 if Id_array is not None:

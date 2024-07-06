@@ -2,13 +2,14 @@ import math
 import scipy
 import vtk
 
-def build_image_grid(x, y, z, grd_out, need_smooth=False):
+
+def build_image_grid(grid_dict, need_smooth=True):
     # points = [(x[i], y[i], z[i]) for i in range(len(x))]
     image = vtk.vtkImageData()
-    bounding = [grd_out['bounds']['xmin'], grd_out['bounds']['xmax'],
-                grd_out['bounds']['ymin'], grd_out['bounds']['ymax'],
-                grd_out['bounds']['zmin'], grd_out['bounds']['zmax']]
-    spacing = [grd_out['spacing']['dx'], grd_out['spacing']['dy'], grd_out['spacing']['dz']]
+    bounding = [grid_dict['bounds']['xmin'], grid_dict['bounds']['xmax'],
+                grid_dict['bounds']['ymin'], grid_dict['bounds']['ymax'],
+                grid_dict['bounds']['zmin'], grid_dict['bounds']['zmax']]
+    spacing = [grid_dict['spacing']['dx'], grid_dict['spacing']['dy'], grid_dict['spacing']['dz']]
     image.SetDimensions(math.ceil((bounding[1] - bounding[0]) / spacing[0]) + 1,
                         math.ceil((bounding[3] - bounding[2]) / spacing[1]) + 1,
                         math.ceil((bounding[5] - bounding[4]) / spacing[2]) + 1)
@@ -18,6 +19,18 @@ def build_image_grid(x, y, z, grd_out, need_smooth=False):
 
     dims = image.GetDimensions()
     pointsNum = dims[0] * dims[1] * dims[2]
+
+    Ia = grid_dict['Ia']
+    Id = grid_dict['Id']
+    Ia_filt = grid_dict['Ia_filt']
+    Id_filt = grid_dict['Id_filt']
+    Kp = grid_dict['Kp']
+    if need_smooth:
+        Ia = scipy.ndimage.gaussian_filter(Ia, sigma=1.1, mode='nearest')
+        Id = scipy.ndimage.gaussian_filter(Id, sigma=1.1, mode='nearest')
+        Ia_filt = scipy.ndimage.gaussian_filter(Ia_filt, sigma=1.1, mode='nearest')
+        Id_filt = scipy.ndimage.gaussian_filter(Id_filt, sigma=1.1, mode='nearest')
+        Kp = scipy.ndimage.gaussian_filter(Kp, sigma=1.1, mode='nearest')
 
     Ia_array = vtk.vtkFloatArray()
     Ia_array.SetName("Ia")
@@ -58,11 +71,11 @@ def build_image_grid(x, y, z, grd_out, need_smooth=False):
                 #     Id_filt_array.InsertNextTuple1(0.0)
                 #     Kp_array.InsertNextTuple1(0.0)
                 #     continue
-                Ia_array.InsertTuple1(index, grd_out['Ia'][index])
-                Id_array.InsertTuple1(index, grd_out['Id'][index])
-                Ia_filt_array.InsertTuple1(index, grd_out['Ia_filt'][index])
-                Id_filt_array.InsertTuple1(index, grd_out['Id_filt'][index])
-                Kp_array.InsertTuple1(index, grd_out['Kp'][index])
+                Ia_array.InsertTuple1(index, Ia[x][y][z])
+                Id_array.InsertTuple1(index, Id[x][y][z])
+                Ia_filt_array.InsertTuple1(index, Ia_filt[x][y][z])
+                Id_filt_array.InsertTuple1(index, Id_filt[x][y][z])
+                Kp_array.InsertTuple1(index, Kp[x][y][z])
                 index += 1
 
     image.GetPointData().AddArray(Ia_array)
