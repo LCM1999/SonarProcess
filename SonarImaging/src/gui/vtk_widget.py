@@ -24,7 +24,8 @@ class VTKWidget(QWidget):
  
         # imaging
         read_from_mat.get_imaging('./data/mat/imaging/COVIS-20220508T120002-imaging1.mat', 'Id_filt')
-        config.imaging['data'] = config.imaging['data']
+        #read_from_mat.get_imaging('./data/mat/imaging/APLUWCOVISMBSONAR001_20141006T210021.023Z-IMAGING.mat', 'v')
+        #config.imaging['data'] = config.imaging['data']
         data_process.imaging_cutting([-20,0,-20,0,0,20])
         config.imaging['vtk_data'] = data_process.to_vtk_data(config.imaging['data_cut'])
         

@@ -27,7 +27,7 @@ def axis(L=100):
 def volume(vtk_data):
     color_func = vtk.vtkColorTransferFunction()
     color_func.AddRGBPoint(0.0, 0.0, 0.0, 0.0)    
-    color_func.AddRGBPoint(0.00005, 1.0, 1.0, 1.0)
+    color_func.AddRGBPoint(0.00001, 1.0, 1.0, 1.0)
 
     opacity_func = vtk.vtkPiecewiseFunction()
     opacity_func.AddPoint(0, 0)
@@ -88,6 +88,7 @@ def centerline(th=100, color=(1.0,0.0,0.0)):
     for r in regions:
         if r['count'] > th:
             points = feature_detection.get_center_points(r['id'])
+            points = feature_detection.curve_fitting(points)
             for i in range(len(points)):
                 points[i] = (points[i][0]*spacing[0]+bounds[0],points[i][1]*spacing[1]+bounds[2],points[i][2]*spacing[2]+bounds[4])
             act = lines(points, color=color)

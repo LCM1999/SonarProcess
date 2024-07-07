@@ -34,6 +34,10 @@ def get_imaging(file_path, value_type):
     config.imaging['spacing'] = [spacing['dx'][0][0],spacing['dy'][0][0],spacing['dz'][0][0]]
 
 
+def get_doppler_data(file_path):
+    ...
+
+
 def get_bathy_from_diffuse(file_path):
     data = scipy.io.loadmat(file_path)
     diffuse = data['diffuse'][0][0]

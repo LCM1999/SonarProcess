@@ -5,7 +5,6 @@ import vtk, vtkmodules
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import config
 from processing import feature_detection, read_from_mat, rendering_actors
-from gui.left_panel import LeftPanel
 from gui.right_panel import RightPanel
 from gui.vtk_widget import VTKWidget
 
@@ -27,10 +26,8 @@ class MainWindow(QMainWindow):
         file.addAction('Load Imaging')
         file.addAction('Load Diffuse')
 
-        #left_panel = LeftPanel()
         vtk_widget = VTKWidget()
         right_panel = RightPanel()
-        #layout.addWidget(left_panel)
         layout.addWidget(vtk_widget)
         layout.addWidget(right_panel)
 

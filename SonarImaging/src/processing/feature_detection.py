@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.optimize
 import vtk, vtkmodules
 from vtkmodules.util import numpy_support
 import scipy
@@ -93,4 +94,32 @@ def get_center_points(region_id, interval=1):
         points.append((max_points[0][0]+min_x,max_points[1][0]+min_y,z+min_z))
     return points
 
-                        
+
+def curve_fitting(points):
+    npoints = np.array(points)
+    x = npoints[:,0]
+    y = npoints[:,1]
+    z = npoints[:,2]
+
+    def curve_func(t, a0, a1, a2):
+        return a0 + a1*t + a2*t**2
+    
+    p0 = [1, 1, 1]
+    params_x, pcov_x = scipy.optimize.curve_fit(curve_func, z, x, p0)
+    params_y, pcov_y = scipy.optimize.curve_fit(curve_func, z, y, p0)
+    
+    xx = curve_func(z, *params_x)
+    yy = curve_func(z, *params_y)
+
+    new_points = []
+    for i in range(len(points)):
+        new_points.append((xx[i],yy[i],z[i]))
+    
+    return new_points
+
+    
+
+
+    
+
+
