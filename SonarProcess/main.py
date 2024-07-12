@@ -8,7 +8,7 @@ import joblib
 
 
 if __name__ == "__main__":
-    covis = covis_raw_sweep('raw/COVIS-20180729T144948-imaging.tar.gz')
+    covis = covis_raw_sweep('F:/Covis/pythonProject/Inputs/APLUWCOVISMBSONAR001_20111001T210757.973Z-IMAGING.tar.gz')
     #with open('data/covis.bin', "rb") as file:
     #    covis = joblib.load(file)
 

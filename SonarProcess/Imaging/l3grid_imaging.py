@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd
 
 
-
-
 def sub2ind(shape, i, j, k):
     return (i * shape[1] + j) * shape[2] + k
 
@@ -44,7 +42,7 @@ def l3grid_imaging(grd_in, grd_out):
     # use only finite points within the grid
     ii = np.where(
         np.isfinite(Id) & (Id > 1e-9) & (Ia > 1e-9) & np.isfinite(Ia) & (x >= xmin) & (x <= xmax) & (y >= ymin) & (
-                    y <= ymax) & (z >= zmin) & (z <= zmax))[0]
+                y <= ymax) & (z >= zmin) & (z <= zmax))[0]
 
     if ii.shape[0] > 0:
         x = x[ii]

@@ -44,4 +44,8 @@ def covis_raw_sweep(filepath):
     shutil.rmtree(root2[0])
 
     return covis
+
+if __name__ == "__main__":
+    covis = covis_imaging_sweep("F:/Covis/pythonProject/Inputs/APLUWCOVISMBSONAR001_20111001T210757.973Z-IMAGING")
+
   

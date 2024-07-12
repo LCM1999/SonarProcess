@@ -9,7 +9,6 @@ from gui.right_panel import RightPanel
 from gui.vtk_widget import VTKWidget
 
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -30,7 +29,6 @@ class MainWindow(QMainWindow):
         right_panel = RightPanel()
         layout.addWidget(vtk_widget)
         layout.addWidget(right_panel)
-
 
 
 if __name__ == "__main__":
