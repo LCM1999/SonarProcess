@@ -1,3 +1,5 @@
+import math
+
 import numpy
 import numpy as np
 import scipy.optimize
@@ -13,6 +15,13 @@ from SonarImaging.src.processing.read_from_mat import *
 # marks = []
 # regions = []
 th = 3e-5
+lamb = 1.06
+lamb2 = lamb * lamb
+alpha = 0.1
+alpha_T = 1.32e-4
+ro_ref = 1.04e3
+Cp = 3.92e3
+g = 9.8
 
 
 # def region_growing(grp, seed):
@@ -316,6 +325,68 @@ def calculate_velocity_feild(doppler_grid, marks, plume_region, center_line: dic
     return velocity_field
 
 
+def Q_M_estimate(w_field, plume_region, center_line, spacing = 0.5):
+    region_bounds = plume_region['bounds']
+
+    size = center_line['size']
+    points = center_line['center_points']
+    center_v = center_line['center_velocity']
+    center_tan_vec = center_line['tan_vec']
+
+    Q = np.zeros(size)
+    M = np.zeros(size)
+
+    center_w = np.einsum('i, ij->ij', center_v, center_tan_vec)[:, 2]
+
+    for k in range(size):
+        plane_w_field = w_field[:, :, region_bounds[4] + k]
+        # plane_marks = marks[:, :, region_bounds[4] + size]
+        plane_w_field[plane_w_field < (center_w[k] * 0.1)] = 0
+        Q[k] = np.sum(plane_w_field * np.power(spacing, 2)) / 0.9
+        M[k] = np.sum(np.power(plane_w_field, 2) * np.power(spacing, 2)) / 0.99
+
+    return Q, M
+
+
+def be_estimate(Q, M):
+    return Q / np.sqrt(2 * np.pi * M)
+
+
+def Zi_estimate(be):
+    return (5 * be) / (6 * alpha)
+
+
+def B0_estimate(Q, Zi):
+    return np.power(Q, 3) / ((3 * np.pi * (1 + lamb2)) / (2 * np.power(5 / (6 * alpha), 4)) * np.power(Zi, 5))
+
+
+def H0_estimate(B0):
+    return (Cp * ro_ref) / (g * alpha_T) * B0
+
+
+def get_H0(v_field, plume_region, center_line, spacing=0.5):
+    w_field = v_field[:, :, :, 2]
+    Q, M = Q_M_estimate(w_field, plume_region, center_line, spacing)
+    be = be_estimate(Q, M)
+    Zi = Zi_estimate(be)
+    B0 = B0_estimate(Q, Zi)
+    H0 = H0_estimate(B0)
+    return H0
+
+
+def calculate_H_field(v_field, spacing=0.5):
+    w_field = v_field[:, :, :, 2]
+    dS = np.power(spacing, 2)
+    Q_field = w_field * dS
+    # M_field = np.power(w_field, 2) * dS
+    be = 1 / np.sqrt(2 * np.pi)
+    Zi = (5 * be) / (6 * alpha)
+    B_field = B0_estimate(Q_field, Zi)
+    H_field = H0_estimate(B_field)
+    return H_field
+
+
+
 if __name__ == "__main__":
     doppler = get_doppler_data("F:/Covis/pythonProject/Inputs/APLUWCOVISMBSONAR001_20141006T210836.397Z-DOPPLER.mat")
     imaging = get_doppler_image("F:/Covis/pythonProject/Inputs/APLUWCOVISMBSONAR001_20141006T210836.397Z-DOPPLER.mat")
@@ -331,11 +402,15 @@ if __name__ == "__main__":
 
     v_field = calculate_velocity_feild(doppler, marks, plume_region, center_line)
 
+    H = get_H0(v_field, plume_region, center_line)
+    H_field = calculate_H_field(v_field)
+
     # v_array = vtkmodules.util.numpy_support.numpy_to_vtk(v_field.ravel(), deep=True, array_type=vtk.VTK_DOUBLE)
     # v_array.SetName('velocity')
     # v_array.SetNumberOfComponents(3)
 
-    velocity_image = build_image_grid(array_dict={'v': v_field}, bounds=doppler['bounds'], spacing=doppler['spacing'])
+    velocity_image = build_image_grid(
+        array_dict={'v': v_field, 'H': H_field}, bounds=doppler['bounds'], spacing=doppler['spacing'])
     save_image(velocity_image, "F:/data/", 'velocity.vti')
 
     sight_v_array = vtkmodules.util.numpy_support.numpy_to_vtk(center_line['sight_velocity'].ravel(), deep=True,
@@ -347,6 +422,10 @@ if __name__ == "__main__":
                                                                 array_type=vtk.VTK_DOUBLE)
     center_v_array.SetName('center_v')
     center_v_array.SetNumberOfComponents(1)
+
+    H0_array = vtkmodules.util.numpy_support.numpy_to_vtk(H.ravel(), deep=True, array_type=vtk.VTK_DOUBLE)
+    H0_array.SetName('H0')
+    H0_array.SetNumberOfComponents(1)
 
     vtkPoints = vtk.vtkPoints()
     for point in points:
@@ -364,6 +443,7 @@ if __name__ == "__main__":
     polyData.SetLines(cells)
     polyData.GetPointData().AddArray(sight_v_array)
     polyData.GetPointData().AddArray(center_v_array)
+    polyData.GetPointData().AddArray(H0_array)
 
     writer = vtk.vtkXMLPolyDataWriter()
     writer.SetInputData(polyData)
